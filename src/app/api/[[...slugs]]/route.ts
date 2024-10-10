@@ -2,6 +2,7 @@ import { swagger } from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 import { transactions, utils } from "near-api-js";
 import {
+  createTransferProposal,
   fetchNearView,
   fetchNonce,
   latestBlockHash,
@@ -13,43 +14,18 @@ const app = new Elysia({ prefix: "/api", aot: false })
   .use(swagger())
   // Create a Near Transfer proposal
   .get(
-    "/transfer/:dao/:receiver/:quantity",
+    "/transfer/near/:dao/:receiver/:quantity",
     async ({ params: { dao, receiver, quantity }, headers }) => {
       const mbMetadata = JSON.parse(headers["mb-metadata"] || "{}");
       const accountId = mbMetadata?.accountData?.accountId || "near";
       const publicKey = mbMetadata?.accountData?.devicePublicKey || "";
-      const daoPolicy = await fetchNearView(dao, "get_policy", "e30=");
-      const actions: transactions.Action[] = [];
-      const args = {
-        proposal: {
-          description: "Transfer NEAR to " + receiver + ".",
-          kind: {
-            Transfer: {
-              token_id: "",
-              receiver_id: receiver,
-              amount: Big(quantity).mul(Big(10).pow(24)).toFixed(),
-            },
-          },
-        },
-      };
-      actions.push(
-        transactions.functionCall(
-          "add_proposal",
-          args,
-          BigInt("200000000000000"), //new BN("200000000000000"), //200 Tgas ?
-          BigInt(daoPolicy?.proposal_bond || "100000000000000000000000"), //0.1 deposit?
-        ),
-      );
-
-      const blockHash = await latestBlockHash();
-      const nonce = await fetchNonce(accountId, publicKey);
-      const transaction = transactions.createTransaction(
+      const transaction = await createTransferProposal(
         accountId,
         publicKey,
         dao,
-        nonce,
-        actions,
-        utils.serialize.base_decode(blockHash),
+        receiver,
+        quantity,
+        "",
       );
       return transaction;
     },
@@ -159,6 +135,74 @@ const app = new Elysia({ prefix: "/api", aot: false })
         utils.serialize.base_decode(blockHash),
       );
 
+      return transaction;
+    },
+  )
+  // fetch all daos
+  .get("/alldaos", async () => {
+    const daos = (await pikespeakQuery(`daos/all`)).map(({ contract_id }) => ({
+      contract_id,
+    })); // Exclude total_in_dollar
+    return { daos };
+  })
+  // Fetch a single DAO using specific keywords.
+  .get("/dao/match/:keyword", async ({ params: { keyword } }) => {
+    const daos = await pikespeakQuery(`daos/all`);
+    // Filter the daos based on the keyword matching part or the full contract_id
+    const filteredDaos = daos
+      .filter((dao) => new RegExp(keyword, "i").test(dao.contract_id))
+      .map(({ contract_id }) => ({ contract_id }));
+
+    return { filteredDaos };
+  })
+  // Details of a particular DAO
+  .get("/dao/:daoId", async ({ params: { daoId } }) => {
+    const dao = await fetchNearView(daoId, "get_policy", "e30=");
+    return { dao };
+  })
+  // List proposals only created by the user
+  .get("/proposals/user", async ({ query, headers }) => {
+    const mbMetadata = JSON.parse(headers["mb-metadata"] || "{}");
+    const accountId =
+      query.account || mbMetadata?.accountData?.accountId || "near";
+    const proposals = await pikespeakQuery(
+      `daos/proposals-by-proposer/${accountId}`,
+    );
+    return { proposals };
+  })
+  // Proposal for USDT transfer
+  .get(
+    "/transfer/usdt/:dao/:receiver/:quantity",
+    async ({ params: { dao, receiver, quantity }, headers }) => {
+      const mbMetadata = JSON.parse(headers["mb-metadata"] || "{}");
+      const accountId = mbMetadata?.accountData?.accountId || "near";
+      const publicKey = mbMetadata?.accountData?.devicePublicKey || "";
+      const transaction = await createTransferProposal(
+        accountId,
+        publicKey,
+        dao,
+        receiver,
+        quantity,
+        "usdt.tether-token.near",
+      );
+      return transaction;
+    },
+  )
+  // Proposal for USDC transfer
+  .get(
+    "/transfer/usdc/:dao/:receiver/:quantity",
+    async ({ params: { dao, receiver, quantity }, headers }) => {
+      const mbMetadata = JSON.parse(headers["mb-metadata"] || "{}");
+      const accountId = mbMetadata?.accountData?.accountId || "near";
+      const publicKey = mbMetadata?.accountData?.devicePublicKey || "";
+      const transaction = await createTransferProposal(
+        accountId,
+        publicKey,
+        dao,
+        receiver,
+        quantity,
+        "17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1",
+      );
       return transaction;
     },
   )

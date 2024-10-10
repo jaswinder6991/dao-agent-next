@@ -16,7 +16,7 @@
     "axios": "^1.7.3",
     "big.js": "^6.2.1",
     "elysia": "^1.0.16",
-    "make-agent": "^0.0.9",
+    "make-agent": "0.0.15-rc.2",
     "near-api-js": "^4.0.2",
     "next": "14.2.3",
     "react": "^18",

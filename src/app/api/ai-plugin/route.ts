@@ -921,6 +921,425 @@ const json = {
         },
       },
     },
+    "/api/proposal/addMember/{dao}/{memberAccount}/{role}": {
+      get: {
+        description:
+          "Creates a proposal to add a new member to a DAO with a specified role.",
+        operationId: "createAddMemberProposal",
+        parameters: [
+          {
+            in: "path",
+            name: "dao",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "The ID of the DAO to which the member will be added.",
+          },
+          {
+            in: "path",
+            name: "memberAccount",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "The account ID of the new member being added.",
+          },
+          {
+            in: "path",
+            name: "role",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description:
+              "The role to be assigned to the new member (e.g., council, advisor).",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Transaction data generated successfully.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    signerId: {
+                      type: "string",
+                      description:
+                        "The account ID that should sign this transaction.",
+                    },
+                    publicKey: {
+                      type: "string",
+                      description:
+                        "The public key associated with the signer account.",
+                    },
+                    nonce: {
+                      type: "string",
+                      description:
+                        "A unique number to ensure the uniqueness of the transaction.",
+                    },
+                    receiverId: {
+                      type: "string",
+                      description:
+                        "The account ID of the DAO contract that will receive this transaction.",
+                    },
+                    actions: {
+                      type: "array",
+                      description:
+                        "The list of actions to be performed in this transaction.",
+                      items: {
+                        type: "object",
+                        properties: {
+                          functionCall: {
+                            type: "object",
+                            properties: {
+                              methodName: {
+                                type: "string",
+                                description:
+                                  "The name of the contract method to be called.",
+                              },
+                              args: {
+                                type: "object",
+                                properties: {
+                                  type: {
+                                    type: "string",
+                                    description:
+                                      "The type of the arguments data.",
+                                  },
+                                  data: {
+                                    type: "array",
+                                    items: {
+                                      type: "integer",
+                                    },
+                                    description:
+                                      "The encoded arguments for the function call.",
+                                  },
+                                },
+                              },
+                              gas: {
+                                type: "string",
+                                description:
+                                  "The amount of gas attached to this function call.",
+                              },
+                              deposit: {
+                                type: "string",
+                                description:
+                                  "The amount of NEAR tokens attached to this function call.",
+                              },
+                            },
+                          },
+                          enum: {
+                            type: "string",
+                            description: "The type of action being performed.",
+                          },
+                        },
+                      },
+                    },
+                    blockHash: {
+                      type: "object",
+                      additionalProperties: {
+                        type: "integer",
+                      },
+                      description:
+                        "The hash of the block used as a reference for this transaction.",
+                    },
+                  },
+                  required: [
+                    "signerId",
+                    "publicKey",
+                    "nonce",
+                    "receiverId",
+                    "actions",
+                    "blockHash",
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/proposal/removeMember/{dao}/{memberAccount}/{role}": {
+      get: {
+        description:
+          "Creates a proposal to remove a member from a DAO and revoke a specified role.",
+        operationId: "createRemoveMemberProposal",
+        parameters: [
+          {
+            in: "path",
+            name: "dao",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description:
+              "The ID of the DAO from which the member will be removed.",
+          },
+          {
+            in: "path",
+            name: "memberAccount",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "The account ID of the member being removed.",
+          },
+          {
+            in: "path",
+            name: "role",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description:
+              "The role to be revoked from the member (e.g., council, advisor).",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Transaction data generated successfully.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    signerId: {
+                      type: "string",
+                      description:
+                        "The account ID that should sign this transaction.",
+                    },
+                    publicKey: {
+                      type: "string",
+                      description:
+                        "The public key associated with the signer account.",
+                    },
+                    nonce: {
+                      type: "string",
+                      description:
+                        "A unique number to ensure the uniqueness of the transaction.",
+                    },
+                    receiverId: {
+                      type: "string",
+                      description:
+                        "The account ID of the DAO contract that will receive this transaction.",
+                    },
+                    actions: {
+                      type: "array",
+                      description:
+                        "The list of actions to be performed in this transaction.",
+                      items: {
+                        type: "object",
+                        properties: {
+                          functionCall: {
+                            type: "object",
+                            properties: {
+                              methodName: {
+                                type: "string",
+                                description:
+                                  "The name of the contract method to be called.",
+                              },
+                              args: {
+                                type: "object",
+                                properties: {
+                                  type: {
+                                    type: "string",
+                                    description:
+                                      "The type of the arguments data.",
+                                  },
+                                  data: {
+                                    type: "array",
+                                    items: {
+                                      type: "integer",
+                                    },
+                                    description:
+                                      "The encoded arguments for the function call.",
+                                  },
+                                },
+                              },
+                              gas: {
+                                type: "string",
+                                description:
+                                  "The amount of gas attached to this function call.",
+                              },
+                              deposit: {
+                                type: "string",
+                                description:
+                                  "The amount of NEAR tokens attached to this function call.",
+                              },
+                            },
+                          },
+                          enum: {
+                            type: "string",
+                            description: "The type of action being performed.",
+                          },
+                        },
+                      },
+                    },
+                    blockHash: {
+                      type: "object",
+                      additionalProperties: {
+                        type: "integer",
+                      },
+                      description:
+                        "The hash of the block used as a reference for this transaction.",
+                    },
+                  },
+                  required: [
+                    "signerId",
+                    "publicKey",
+                    "nonce",
+                    "receiverId",
+                    "actions",
+                    "blockHash",
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/proposal/swap/near/{dao}/{tokenOutId}/{sendAmount}": {
+      get: {
+        description:
+          "Creates a proposal to swap a specified amount of near to another token within the DAO.",
+        operationId: "createTokenSwapProposal",
+        parameters: [
+          {
+            in: "path",
+            name: "dao",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "The ID of the DAO initiating the token swap.",
+          },
+
+          {
+            in: "path",
+            name: "tokenOutId",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description:
+              "The ID of the token to be received in the swap (output token).",
+          },
+          {
+            in: "path",
+            name: "sendAmount",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "The amount of the input token to be swapped.",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Transaction data generated successfully.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    signerId: {
+                      type: "string",
+                      description:
+                        "The account ID that should sign this transaction.",
+                    },
+                    publicKey: {
+                      type: "string",
+                      description:
+                        "The public key associated with the signer account.",
+                    },
+                    nonce: {
+                      type: "string",
+                      description:
+                        "A unique number to ensure the uniqueness of the transaction.",
+                    },
+                    receiverId: {
+                      type: "string",
+                      description:
+                        "The account ID of the DAO contract that will receive this transaction.",
+                    },
+                    actions: {
+                      type: "array",
+                      description:
+                        "The list of actions to be performed in this transaction.",
+                      items: {
+                        type: "object",
+                        properties: {
+                          functionCall: {
+                            type: "object",
+                            properties: {
+                              methodName: {
+                                type: "string",
+                                description:
+                                  "The name of the contract method to be called.",
+                              },
+                              args: {
+                                type: "object",
+                                properties: {
+                                  type: {
+                                    type: "string",
+                                    description:
+                                      "The type of the arguments data.",
+                                  },
+                                  data: {
+                                    type: "array",
+                                    items: {
+                                      type: "integer",
+                                    },
+                                    description:
+                                      "The encoded arguments for the function call.",
+                                  },
+                                },
+                              },
+                              gas: {
+                                type: "string",
+                                description:
+                                  "The amount of gas attached to this function call.",
+                              },
+                              deposit: {
+                                type: "string",
+                                description:
+                                  "The amount of NEAR tokens attached to this function call.",
+                              },
+                            },
+                          },
+                          enum: {
+                            type: "string",
+                            description: "The type of action being performed.",
+                          },
+                        },
+                      },
+                    },
+                    blockHash: {
+                      type: "object",
+                      additionalProperties: {
+                        type: "integer",
+                      },
+                      description:
+                        "The hash of the block used as a reference for this transaction.",
+                    },
+                  },
+                  required: [
+                    "signerId",
+                    "publicKey",
+                    "nonce",
+                    "receiverId",
+                    "actions",
+                    "blockHash",
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
 };
 

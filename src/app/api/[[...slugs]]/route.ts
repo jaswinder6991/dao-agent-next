@@ -5,6 +5,7 @@ import {
   createTransferProposal,
   fetchNearView,
   fetchNonce,
+  getSwapTxn,
   latestBlockHash,
   pikespeakQuery,
 } from "./utils";
@@ -192,6 +193,146 @@ const app = new Elysia({ prefix: "/api", aot: false })
         receiver,
         quantity,
         "17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1",
+      );
+      return transaction;
+    },
+  )
+
+  // Proposal for adding a member
+  .get(
+    "/proposal/addMember/:dao/:memberAccount/:role",
+    async ({ params: { dao, memberAccount, role }, headers }) => {
+      const mbMetadata = JSON.parse(headers["mb-metadata"] || "{}");
+      const accountId = mbMetadata?.accountData?.accountId || "near";
+      const publicKey = mbMetadata?.accountData?.devicePublicKey || "";
+      const daoPolicy = await fetchNearView(dao, "get_policy", "e30=");
+      const actions: transactions.Action[] = [];
+      const args = {
+        proposal: {
+          description: "Potential member",
+          kind: {
+            AddMemberToRole: {
+              member_id: memberAccount,
+              role: role,
+            },
+          },
+        },
+      };
+      actions.push(
+        transactions.functionCall(
+          "add_proposal",
+          args,
+          BigInt("200000000000000"), //new BN("200000000000000"), //200 Tgas ?
+          BigInt(daoPolicy?.proposal_bond || "100000000000000000000000"), //0.1 deposit?
+        ),
+      );
+      const blockHash = await latestBlockHash();
+      const nonce = await fetchNonce(accountId, publicKey);
+      const transaction = transactions.createTransaction(
+        accountId,
+        publicKey,
+        dao,
+        nonce,
+        actions,
+        utils.serialize.base_decode(blockHash),
+      );
+      return transaction;
+    },
+  )
+
+  // Proposal for removing a member
+  .get(
+    "/proposal/removeMember/:dao/:memberAccount/:role",
+    async ({ params: { dao, memberAccount, role }, headers }) => {
+      const mbMetadata = JSON.parse(headers["mb-metadata"] || "{}");
+      const accountId = mbMetadata?.accountData?.accountId || "near";
+      const publicKey = mbMetadata?.accountData?.devicePublicKey || "";
+      const daoPolicy = await fetchNearView(dao, "get_policy", "e30=");
+      const actions: transactions.Action[] = [];
+      const args = {
+        proposal: {
+          description: "Remove member",
+          kind: {
+            RemoveMemberFromRole: {
+              member_id: memberAccount,
+              role: role,
+            },
+          },
+        },
+      };
+      actions.push(
+        transactions.functionCall(
+          "add_proposal",
+          args,
+          BigInt("200000000000000"), //new BN("200000000000000"), //200 Tgas ?
+          BigInt(daoPolicy?.proposal_bond || "100000000000000000000000"), //0.1 deposit?
+        ),
+      );
+      const blockHash = await latestBlockHash();
+      const nonce = await fetchNonce(accountId, publicKey);
+      const transaction = transactions.createTransaction(
+        accountId,
+        publicKey,
+        dao,
+        nonce,
+        actions,
+        utils.serialize.base_decode(blockHash),
+      );
+      return transaction;
+    },
+  )
+
+  // create proposal to swap tokens
+  .get(
+    "/proposal/swap/near/:dao/:tokenOutId/:sendAmount",
+    async ({ params: { dao, tokenOutId, sendAmount }, headers }) => {
+      const mbMetadata = JSON.parse(headers["mb-metadata"] || "{}");
+      const accountId = mbMetadata?.accountData?.accountId || "near";
+      const publicKey = mbMetadata?.accountData?.devicePublicKey || "";
+      const daoPolicy = await fetchNearView(dao, "get_policy", "e30=");
+
+      const actions: transactions.Action[] = [];
+      const swapTxns = getSwapTxn({
+        accountId: dao,
+        sendAmount: sendAmount,
+        tokenInId: "wrap.near",
+        tokenOutId: tokenOutId,
+      })[0];
+
+      const args = {
+        proposal: {
+          description: `Swap ${sendAmount} Near to ${tokenOutId}`,
+          kind: {
+            FunctionCall: {
+              receiver_id: swapTxns.receiverId,
+              actions: swapTxns.functionCalls.map((fc) => ({
+                method_name: fc.methodName,
+                args: Buffer.from(JSON.stringify(fc.args)).toString("base64"),
+                deposit: fc.amount,
+                gas: fc.gas,
+              })),
+            },
+          },
+        },
+      };
+      actions.push(
+        transactions.functionCall(
+          "add_proposal",
+          args,
+          BigInt("200000000000000"), //new BN("200000000000000"), //200 Tgas ?
+          BigInt(daoPolicy?.proposal_bond || "100000000000000000000000"), //0.1 deposit?
+        ),
+      );
+
+      const blockHash = await latestBlockHash();
+      const nonce = await fetchNonce(accountId, publicKey);
+      const transaction = transactions.createTransaction(
+        accountId,
+        publicKey,
+        dao,
+        nonce,
+        actions,
+        utils.serialize.base_decode(blockHash),
       );
       return transaction;
     },
